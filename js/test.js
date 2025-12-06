@@ -32,12 +32,12 @@ function initMap() {
         };
       });
     } else {
-      // 遠く→東京都全体を同じ色
+      // 遠く → 東京都全体を同じ色（境界線消す）
       map.data.setStyle({
-        fillColor: "#f53302ff",   // ← 好きな色でOK
+        fillColor: "rgba(245, 51, 2, 1)",
         fillOpacity: 0.6,
-        strokeColor: "#555",
-        strokeWeight: 1,
+        strokeColor: "transparent", // ← 線の色を透明に
+        strokeWeight: 0,            // ← 境界線そのものを非表示に
       });
     }
   }
