@@ -4,14 +4,63 @@ function initMap() {
     center: { lat: 35.6895, lng: 139.6917 },
   });
 
+  // 北海道のGeoJSON読み込み
+  map.data.loadGeoJson("data/hokkaido/hokkaido.geojson");
+  // 東北6県のGeoJSON読み込み
+  map.data.loadGeoJson("data/touhoku/aomori.geojson");
+  map.data.loadGeoJson("data/touhoku/iwate.geojson");
+  map.data.loadGeoJson("data/touhoku/miyagi.geojson");
+  map.data.loadGeoJson("data/touhoku/akita.geojson");
+  map.data.loadGeoJson("data/touhoku/yamagata.geojson");
+  map.data.loadGeoJson("data/touhoku/fukusima.geojson");
   // 関東1都6県のGeoJSON読み込み
-  map.data.loadGeoJson("ibaraki.geojson");
-  map.data.loadGeoJson("totigi.geojson");
-  map.data.loadGeoJson("gunma.geojson");
-  map.data.loadGeoJson("saitama.geojson");
-  map.data.loadGeoJson("chiba.geojson");
-  map.data.loadGeoJson("tokyo.geojson");
-  map.data.loadGeoJson("kanagawa.geojson");
+  map.data.loadGeoJson("data/kantou/ibaraki.geojson");
+  map.data.loadGeoJson("data/kantou/totigi.geojson");
+  map.data.loadGeoJson("data/kantou/gunma.geojson");
+  map.data.loadGeoJson("data/kantou/saitama.geojson");
+  map.data.loadGeoJson("data/kantou/chiba.geojson");
+  map.data.loadGeoJson("data/kantou/tokyo.geojson");
+  map.data.loadGeoJson("data/kantou/kanagawa.geojson");
+  // 甲信越・北陸6県のGeoJSON読み込み
+  map.data.loadGeoJson("data/kousinetu-hokuriku/niigata.geojson");
+  map.data.loadGeoJson("data/kousinetu-hokuriku/toyama.geojson");
+  map.data.loadGeoJson("data/kousinetu-hokuriku/isikawa.geojson");
+  map.data.loadGeoJson("data/kousinetu-hokuriku/fukui.geojson");
+  map.data.loadGeoJson("data/kousinetu-hokuriku/yamanasi.geojson");
+  map.data.loadGeoJson("data/kousinetu-hokuriku/nagano.geojson");
+  // 東海4県のGeoJSON読み込み
+  map.data.loadGeoJson("data/toukai/gihu.geojson");
+  map.data.loadGeoJson("data/toukai/sizuoka.geojson");
+  map.data.loadGeoJson("data/toukai/aiti.geojson");
+  map.data.loadGeoJson("data/toukai/mie.geojson");
+  // 近畿2府4県のGeoJSON読み込み
+  map.data.loadGeoJson("data/kinki/siga.geojson");
+  map.data.loadGeoJson("data/kinki/kyoto.geojson");
+  map.data.loadGeoJson("data/kinki/osaka.geojson");
+  map.data.loadGeoJson("data/kinki/hyougo.geojson");
+  map.data.loadGeoJson("data/kinki/nara.geojson");
+  map.data.loadGeoJson("data/kinki/wakayama.geojson");
+  // 中国5県のGeoJSON読み込み
+  map.data.loadGeoJson("data/chuugoku/tottori.geojson");
+  map.data.loadGeoJson("data/chuugoku/simane.geojson");
+  map.data.loadGeoJson("data/chuugoku/okayama.geojson");
+  map.data.loadGeoJson("data/chuugoku/hiroshima.geojson");
+  map.data.loadGeoJson("data/chuugoku/yamaguchi.geojson");
+  // 四国4県のGeoJSON読み込み
+  map.data.loadGeoJson("data/sikoku/tokushima.geojson");
+  map.data.loadGeoJson("data/sikoku/kagawa.geojson");
+  map.data.loadGeoJson("data/sikoku/ehime.geojson");
+  map.data.loadGeoJson("data/sikoku/kouchi.geojson");
+  // 九州7県のGeoJSON読み込み
+  map.data.loadGeoJson("data/kyusyuu/fukuoka.geojson");
+  map.data.loadGeoJson("data/kyusyuu/saga.geojson");
+  map.data.loadGeoJson("data/kyusyuu/nagasaki.geojson");
+  map.data.loadGeoJson("data/kyusyuu/kumamoto.geojson");
+  map.data.loadGeoJson("data/kyusyuu/ooita.geojson");
+  map.data.loadGeoJson("data/kyusyuu/miyazaki.geojson");
+  map.data.loadGeoJson("data/kyusyuu/kagoshima.geojson");
+  // 沖縄県のGeoJSON読み込み
+  map.data.loadGeoJson("data/okinawa/okinawa.geojson");
 
   // ▼ 色生成（市町村・区・県共通）
   function colorFromName(name) {
@@ -57,7 +106,7 @@ function initMap() {
           fillColor: colorFromName(name),
           fillOpacity: 0.35,
           strokeColor: "",
-          strokeWeight: 1,
+          strokeWeight: 0.5,
         };
       });
 
