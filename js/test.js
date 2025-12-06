@@ -1,20 +1,28 @@
 function initMap() {
   const map = new google.maps.Map(document.getElementById("map"), {
-    zoom: 5,
-    center: { lat: 43.0, lng: 142.0 }, // 北海道の中心
+    zoom: 10,
+    center: { lat: 35.6895, lng: 139.6917 }, // 東京中心
   });
 
-  fetch('./hokkaido.geojson')
-    .then(res => res.json())
-    .then(geojson => {
-      console.log("読み込んだ GeoJSON:", geojson);
-      map.data.addGeoJson(geojson);
+  // GeoJSON（東京23区の詳細データ）を読み込み
+  map.data.loadGeoJson("tokyo.geojson");
 
-      map.data.setStyle({
-        fillColor: "transparent",
-        strokeColor: "#f00",
-        strokeWeight: 2
-      });
-    })
-    .catch(err => console.error("エラー:", err));
+  // スタイル
+  map.data.setStyle({
+    fillColor: "transparent",
+    strokeColor: "#333",
+    strokeWeight: 1
+  });
+
+  // ホバー時のハイライト
+  map.data.addListener("mouseover", (e) => {
+    map.data.overrideStyle(e.feature, {
+      strokeColor: "red",
+      strokeWeight: 3
+    });
+  });
+
+  map.data.addListener("mouseout", () => {
+    map.data.revertStyle();
+  });
 }
