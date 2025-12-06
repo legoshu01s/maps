@@ -1,13 +1,21 @@
-function initMap() {
+function initMap() { 
   const map = new google.maps.Map(document.getElementById("map"), {
     zoom: 10,
     center: { lat: 35.6895, lng: 139.6917 },
   });
 
+  // 一都三県のGeoJSON読み込み
+  map.data.loadGeoJson("ibaraki.geojson");
+  map.data.loadGeoJson("totigi.geojson");
+  map.data.loadGeoJson("gunma.geojson");
+  map.data.loadGeoJson("saitama.geojson");
+  map.data.loadGeoJson("chiba.geojson");
   map.data.loadGeoJson("tokyo.geojson");
+  map.data.loadGeoJson("kanagawa.geojson");
 
-  // 区名から色を自動生成（区別色）
-  function colorFromWardName(name) {
+  // 市町村レベルの色（市名 or 区名）
+  function colorFromName(name) {
+    if (!name) name = "unknown";
     let hash = 0;
     for (let i = 0; i < name.length; i++) {
       hash = name.charCodeAt(i) + ((hash << 5) - hash);
@@ -16,53 +24,53 @@ function initMap() {
     return `hsl(${hue}, 70%, 60%)`;
   }
 
-  // ★スタイル変更を行う関数
+  // 東京23区向け
+  function colorFromTokyoWard(name) {
+    return colorFromName(name);
+  }
+
   function updateStyleByZoom() {
     const zoom = map.getZoom();
 
     if (zoom >= 11) {
-      // 近く→区ごとに色分け
+      // ▼ ズームイン → 市区町村レベルで色分け（東京含む）
       map.data.setStyle((feature) => {
-        const ward = feature.getProperty("ward_ja");
+
+        // 東京23区（ward_ja がある場合）
+        const tokyoWard = feature.getProperty("ward_ja");
+
+        // N03_004 = 市名（例：さいたま市、横浜市）
+        const city = feature.getProperty("N03_004");
+
+        // N03_005 = 区名（例：西区、鶴見区）
+        const ward = feature.getProperty("N03_005");
+
+        // 市町村名を決定
+        let name = tokyoWard || ward || city;
+
         return {
-          fillColor: colorFromWardName(ward),
-          fillOpacity: 0.2,
+          fillColor: colorFromName(name),
+          fillOpacity: 0.35,
           strokeColor: "#333",
           strokeWeight: 1,
         };
       });
+
     } else {
-      // 遠く → 東京都全体を同じ色（境界線消す）
-      map.data.setStyle({
-        fillColor: "rgba(245, 51, 2, 1)",
-        fillOpacity: 0.6,
-        strokeColor: "transparent", // ← 線の色を透明に
-        strokeWeight: 0,            // ← 境界線そのものを非表示に
+      // ▼ ズームアウト → 県ごと色分け
+      map.data.setStyle((feature) => {
+        const pref = feature.getProperty("N03_001");
+        return {
+          fillColor: colorFromName(pref),
+          fillOpacity: 0.6,
+          strokeColor: "transparent",
+          strokeWeight: 0,
+        };
       });
     }
   }
 
-  // 初期スタイル
   updateStyleByZoom();
-
-  // ★ズーム変更イベントでスタイル切り替え
   map.addListener("zoom_changed", updateStyleByZoom);
-
-  // hover ハイライト（ズームが近いときのみ有効）
-  map.data.addListener("mouseover", (e) => {
-    if (map.getZoom() >= 11) {   // ★ ハイライトは zoom >= 11 のときだけ
-      map.data.overrideStyle(e.feature, {
-        fillOpacity: 0.5,
-        strokeColor: "red",
-        strokeWeight: 2,
-      });
-    }
-  });
-
-map.data.addListener("mouseout", () => {
-  if (map.getZoom() >= 11) {  // ★ ズームが低い時は revert も不要
-    map.data.revertStyle();
-  }
-});
-
 }
+
