@@ -4,7 +4,7 @@ function initMap() {
     center: { lat: 35.6895, lng: 139.6917 },
   });
 
-  // 一都三県のGeoJSON読み込み
+  // 関東1都6県のGeoJSON読み込み
   map.data.loadGeoJson("ibaraki.geojson");
   map.data.loadGeoJson("totigi.geojson");
   map.data.loadGeoJson("gunma.geojson");
@@ -13,7 +13,7 @@ function initMap() {
   map.data.loadGeoJson("tokyo.geojson");
   map.data.loadGeoJson("kanagawa.geojson");
 
-  // 市町村レベルの色（市名 or 区名）
+  // ▼ 色生成（市町村・区・県共通）
   function colorFromName(name) {
     if (!name) name = "unknown";
     let hash = 0;
@@ -24,44 +24,66 @@ function initMap() {
     return `hsl(${hue}, 70%, 60%)`;
   }
 
-  // 東京23区向け
-  function colorFromTokyoWard(name) {
-    return colorFromName(name);
+  // ▼ 地方名判定（今回は関東のみ）
+  function getRegionName(pref) {
+    const kanto = ["東京都", "埼玉県", "千葉県", "神奈川県", "茨城県", "栃木県", "群馬県"];
+    if (kanto.includes(pref)) return "関東地方";
+    return "その他";
+  }
+
+  // ▼ 地方レベルの色（統一色）
+  function colorFromRegion(region) {
+    return "hsla(0, 93%, 41%, 1.00)"; // 関東地方の色（好きに変更可能）
   }
 
   function updateStyleByZoom() {
     const zoom = map.getZoom();
 
+    // ======================================================
+    // 1️⃣ zoom ≥ 11 → 市区町村レベルで色分け
+    // ======================================================
     if (zoom >= 11) {
-      // ▼ ズームイン → 市区町村レベルで色分け（東京含む）
       map.data.setStyle((feature) => {
-
-        // 東京23区（ward_ja がある場合）
+        // 東京23区
         const tokyoWard = feature.getProperty("ward_ja");
 
-        // N03_004 = 市名（例：さいたま市、横浜市）
-        const city = feature.getProperty("N03_004");
+        // 市区町村（国交省 N03 データ）
+        const city = feature.getProperty("N03_004"); // 市
+        const ward = feature.getProperty("N03_005"); // 区
 
-        // N03_005 = 区名（例：西区、鶴見区）
-        const ward = feature.getProperty("N03_005");
-
-        // 市町村名を決定
-        let name = tokyoWard || ward || city;
+        const name = tokyoWard || ward || city;
 
         return {
           fillColor: colorFromName(name),
           fillOpacity: 0.35,
-          strokeColor: "#333",
+          strokeColor: "",
           strokeWeight: 1,
         };
       });
 
-    } else {
-      // ▼ ズームアウト → 県ごと色分け
+    // ======================================================
+    // 2️⃣ 7 ≤ zoom < 11 → 都県レベルで色分け
+    // ======================================================
+    } else if (zoom >= 8) {
       map.data.setStyle((feature) => {
         const pref = feature.getProperty("N03_001");
         return {
           fillColor: colorFromName(pref),
+          fillOpacity: 0.6,
+          strokeColor: "transparent",
+          strokeWeight: 0,
+        };
+      });
+
+    // ======================================================
+    // 3️⃣ zoom < 7 → 地方レベルで色分け（関東は1色）
+    // ======================================================
+    } else {
+      map.data.setStyle((feature) => {
+        const pref = feature.getProperty("N03_001");
+        const region = getRegionName(pref); // 関東地方に分類
+        return {
+          fillColor: colorFromRegion(region), // 関東は1色
           fillOpacity: 0.6,
           strokeColor: "transparent",
           strokeWeight: 0,
@@ -73,4 +95,3 @@ function initMap() {
   updateStyleByZoom();
   map.addListener("zoom_changed", updateStyleByZoom);
 }
-
