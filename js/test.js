@@ -6,34 +6,57 @@ function initMap() {
 
   map.data.loadGeoJson("tokyo.geojson");
 
-  // 区名から色を自動生成する関数
+  // 区名から色を自動生成（区別色）
   function colorFromWardName(name) {
     let hash = 0;
     for (let i = 0; i < name.length; i++) {
       hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
     const hue = hash % 360;
-    return `hsl(${hue}, 70%, 60%)`; // 彩度70% 明度60%で見やすい色
+    return `hsl(${hue}, 70%, 60%)`;
   }
 
-  // スタイル設定（自動色＋透明度高め）
-  map.data.setStyle((feature) => {
-    const ward = feature.getProperty("ward_ja");
-    return {
-      fillColor: colorFromWardName(ward),
-      fillOpacity: 0.2,  // ← ★透明度を高める（0〜1）
-      strokeColor: "#333",
-      strokeWeight: 1,
-    };
-  });
+  // ★スタイル変更を行う関数
+  function updateStyleByZoom() {
+    const zoom = map.getZoom();
 
-  // ハイライト（濃く）
+    if (zoom >= 11) {
+      // 近く→区ごとに色分け
+      map.data.setStyle((feature) => {
+        const ward = feature.getProperty("ward_ja");
+        return {
+          fillColor: colorFromWardName(ward),
+          fillOpacity: 0.2,
+          strokeColor: "#333",
+          strokeWeight: 1,
+        };
+      });
+    } else {
+      // 遠く→東京都全体を同じ色
+      map.data.setStyle({
+        fillColor: "#f53302ff",   // ← 好きな色でOK
+        fillOpacity: 0.6,
+        strokeColor: "#555",
+        strokeWeight: 1,
+      });
+    }
+  }
+
+  // 初期スタイル
+  updateStyleByZoom();
+
+  // ★ズーム変更イベントでスタイル切り替え
+  map.addListener("zoom_changed", updateStyleByZoom);
+
+  // hover ハイライト（ズームが近いときのみ有効）
   map.data.addListener("mouseover", (e) => {
-    map.data.overrideStyle(e.feature, {
-      fillOpacity: 0.4,
-      strokeColor: "red",
-      strokeWeight: 2,
-    });
+    if (map.getZoom() >= 8) {
+      map.data.overrideStyle(e.feature, {
+        fillOpacity: 0.5,
+        strokeColor: "red",
+        strokeWeight: 2,
+      });
+    }
   });
 
   map.data.addListener("mouseout", () => {
