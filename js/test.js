@@ -50,7 +50,7 @@ function initMap() {
 
   // hover ハイライト（ズームが近いときのみ有効）
   map.data.addListener("mouseover", (e) => {
-    if (map.getZoom() >= 8) {
+    if (map.getZoom() >= 11) {   // ★ ハイライトは zoom >= 11 のときだけ
       map.data.overrideStyle(e.feature, {
         fillOpacity: 0.5,
         strokeColor: "red",
@@ -59,7 +59,10 @@ function initMap() {
     }
   });
 
-  map.data.addListener("mouseout", () => {
+map.data.addListener("mouseout", () => {
+  if (map.getZoom() >= 11) {  // ★ ズームが低い時は revert も不要
     map.data.revertStyle();
-  });
+  }
+});
+
 }
