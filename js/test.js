@@ -1,6 +1,6 @@
 function initMap() { 
   const map = new google.maps.Map(document.getElementById("map"), {
-    zoom: 10,
+    zoom: 5,
     center: { lat: 35.6895, lng: 139.6917 },
   });
 
@@ -58,31 +58,64 @@ function initMap() {
   map.data.loadGeoJson("data/kyusyuu/oita.geojson");
   map.data.loadGeoJson("data/kyusyuu/miyazaki.geojson");
   map.data.loadGeoJson("data/kyusyuu/kagoshima.geojson");
-  // 沖縄県のGeoJSON読み込み
-  map.data.loadGeoJson("data/okinawa/okinawa.geojson");
+  map.data.loadGeoJson("data/kyusyuu/okinawa.geojson");
 
-  // ▼ 色生成（市町村・区・県共通）
-  function colorFromName(name) {
-    if (!name) name = "unknown";
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-      hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const hue = hash % 360;
-    return `hsl(${hue}, 70%, 60%)`;
+// ▼ 都道府県ごとに十分離れた色を作るバージョン
+const prefColorMap = {};
+let prefIndex = 0;
+const TOTAL_PREFS = 47;
+
+// Golden angle を使って均等に色相をバラけさせる
+function colorFromName(name) {
+  if (!name) name = "unknown";
+
+  if (!prefColorMap[name]) {
+    const goldenAngle = 137.508;
+    const hue = (prefIndex * goldenAngle) % 360;
+    prefColorMap[name] = `hsl(${hue}, 70%, 60%)`;
+
+    prefIndex++;
+    if (prefIndex > TOTAL_PREFS) prefIndex = 0;
   }
 
-  // ▼ 地方名判定（今回は関東のみ）
-  function getRegionName(pref) {
-    const kanto = ["東京都", "埼玉県", "千葉県", "神奈川県", "茨城県", "栃木県", "群馬県"];
-    if (kanto.includes(pref)) return "関東地方";
-    return "その他";
-  }
+  return prefColorMap[name];
+}
 
-  // ▼ 地方レベルの色（統一色）
-  function colorFromRegion(region) {
-    return "hsla(0, 93%, 41%, 1.00)"; // 関東地方の色（好きに変更可能）
+
+function getRegionName(pref) {
+  const regions = {
+    "北海道地方": ["北海道"],
+    "東北地方": ["青森県", "岩手県", "宮城県", "秋田県", "山形県", "福島県"],
+    "関東地方": ["東京都", "神奈川県", "千葉県", "埼玉県", "茨城県", "栃木県", "群馬県"],
+    "中部地方": ["新潟県","富山県","石川県","福井県","山梨県","長野県","岐阜県","静岡県","愛知県"],
+    "近畿地方": ["三重県","滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県"],
+    "中国地方": ["鳥取県","島根県","岡山県","広島県","山口県"],
+    "四国地方": ["徳島県","香川県","愛媛県","高知県"],
+    "九州地方": ["福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県"]
+  };
+
+  for (const region in regions) {
+    if (regions[region].includes(pref)) return region;
   }
+  return "その他";
+}
+
+
+function colorFromRegion(region) {
+  const regionColors = {
+    "北海道地方": "hsl(210, 70%, 60%)",
+    "東北地方":   "hsl(185, 70%, 60%)",
+    "関東地方":   "hsl(120, 70%, 60%)",
+    "中部地方":   "hsl(60, 70%, 60%)",
+    "近畿地方":   "hsl(30, 70%, 60%)",
+    "中国地方":   "hsl(0, 70%, 60%)",
+    "四国地方":   "hsl(280, 70%, 60%)",
+    "九州地方":   "hsl(330, 70%, 60%)",
+    "その他":     "hsl(0, 0%, 80%)"
+  };
+  return regionColors[region] || "hsl(0,0%,70%)";
+}
+
 
   function updateStyleByZoom() {
     const zoom = map.getZoom();
@@ -139,6 +172,45 @@ function initMap() {
       });
     }
   }
+
+// ▼ クリックして次のレベルにズームイン
+map.data.addListener("click", (event) => {
+  const zoom = map.getZoom();
+  const feature = event.feature;
+
+  // ポリゴンの中心座標を取得
+  const bounds = new google.maps.LatLngBounds();
+  feature.getGeometry().forEachLatLng((latlng) => bounds.extend(latlng));
+  const center = bounds.getCenter();
+
+  // ------------------------------------
+  // 1️⃣ zoom < 7 → 地方クリック → zoom 8へ
+  // ------------------------------------
+  if (zoom < 7) {
+    map.panTo(center);
+    map.setZoom(8);
+    return;
+  }
+
+  // ------------------------------------
+  // 2️⃣ 7 ≤ zoom < 11 → 都道府県クリック → zoom 11へ
+  // ------------------------------------
+  if (zoom >= 7 && zoom < 11) {
+    map.panTo(center);
+    map.setZoom(11);
+    return;
+  }
+
+  // ------------------------------------
+  // 3️⃣ zoom ≥ 11 → 市区町村クリック → zoom 13へ
+  // ------------------------------------
+  if (zoom >= 11) {
+    map.panTo(center);
+    map.setZoom(13);
+    return;
+  }
+});
+
 
   updateStyleByZoom();
   map.addListener("zoom_changed", updateStyleByZoom);
